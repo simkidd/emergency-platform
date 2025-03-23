@@ -11,7 +11,7 @@ const app = express();
 app.use(cors({ origin: process.env.ALLOWED_ORIGINS }));
 app.use(express.json());
 
-app.use("/api/v1", (req, res) => {
+app.use("/", (req, res) => {
   res.status(200).json({ message: "Backend server is running..." });
 });
 
