@@ -8,4 +8,5 @@ const dotenv_1 = __importDefault(require("dotenv"));
 dotenv_1.default.config();
 exports.environments = {
     MONGO_URI: process.env.MONGO_URI || "",
+    JWT_SECRET: process.env.JWT_SECRET || "",
 };

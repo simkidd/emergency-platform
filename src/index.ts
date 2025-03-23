@@ -2,14 +2,18 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import connectDb from "./db/mongoDb";
+import router from "./routes";
 
 dotenv.config();
 
 const PORT = process.env.PORT || 3000;
 
 const app = express();
-app.use(cors({ origin: ["http://localhost:3000"] }));
+app.use(cors({ origin: ["http://localhost:3000"], credentials: true }));
 app.use(express.json());
+
+// import routes
+app.use("/api/v1", router);
 
 app.use("/", (req, res) => {
   res.status(200).json({ message: "Backend server is running..." });
