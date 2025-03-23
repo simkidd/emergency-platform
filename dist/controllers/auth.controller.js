@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.loginUser = exports.registerUser = void 0;
+exports.logoutUser = exports.refreshToken = exports.loginUser = exports.registerUser = void 0;
 const user_schema_1 = __importDefault(require("../models/user.schema"));
 const auth_1 = require("../utils/auth");
 const auth_service_1 = require("../services/auth.service");
@@ -95,3 +95,38 @@ const loginUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     }
 });
 exports.loginUser = loginUser;
+const refreshToken = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { refreshToken } = req.body;
+    try {
+        // Validate the refresh token
+        const userId = yield (0, auth_service_1.validateRefreshToken)(refreshToken);
+        // Generate a new access token
+        const user = yield user_schema_1.default.findById(userId);
+        if (!user) {
+            res.status(404).json({ message: "User not found" });
+            return;
+        }
+        const accessToken = (0, auth_1.generateToken)(user);
+        res.status(200).json({ accessToken });
+        return;
+    }
+    catch (error) {
+        res.status(400).json({ message: "Invalid refresh token", error });
+        return;
+    }
+});
+exports.refreshToken = refreshToken;
+const logoutUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { refreshToken } = req.body;
+    try {
+        // Revoke the refresh token
+        yield (0, auth_service_1.revokeRefreshToken)(refreshToken);
+        res.status(200).json({ message: "Logout successful" });
+        return;
+    }
+    catch (error) {
+        res.status(500).json({ message: "Error logging out", error });
+        return;
+    }
+});
+exports.logoutUser = logoutUser;

@@ -1,17 +1,18 @@
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import { environments } from "../config/environments";
+import { IUser } from "../interfaces/user.interface";
 
 const { JWT_SECRET } = environments;
 
-export const generateToken = (
-  userId: string,
-  email: string,
-  role: string
-): string => {
-  return jwt.sign({ userId, email, role }, JWT_SECRET, {
-    expiresIn: "1h",
-  });
+export const generateToken = (user: IUser): string => {
+  return jwt.sign(
+    { userId: user._id, email: user.email, role: user.role },
+    JWT_SECRET,
+    {
+      expiresIn: "1h",
+    }
+  );
 };
 
 export const hashPassword = async (password: string): Promise<string> => {

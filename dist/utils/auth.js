@@ -17,8 +17,8 @@ const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const environments_1 = require("../config/environments");
 const { JWT_SECRET } = environments_1.environments;
-const generateToken = (userId, email, role) => {
-    return jsonwebtoken_1.default.sign({ userId, email, role }, JWT_SECRET, {
+const generateToken = (user) => {
+    return jsonwebtoken_1.default.sign({ userId: user._id, email: user.email, role: user.role }, JWT_SECRET, {
         expiresIn: "1h",
     });
 };

@@ -1,8 +1,12 @@
 import { Request, Response } from "express";
 import { CreateUserInput, LoginInput } from "../interfaces/auth.interface";
 import User from "../models/user.schema";
-import { comparePassword, hashPassword } from "../utils/auth";
-import { generateTokens } from "../services/auth.service";
+import { comparePassword, generateToken, hashPassword } from "../utils/auth";
+import {
+  generateTokens,
+  revokeRefreshToken,
+  validateRefreshToken,
+} from "../services/auth.service";
 
 export const registerUser = async (req: Request, res: Response) => {
   const { email, location, name, password, role }: CreateUserInput = req.body;
@@ -86,6 +90,44 @@ export const loginUser = async (req: Request, res: Response) => {
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: "Error logging in", error: error });
+    return;
+  }
+};
+
+export const refreshToken = async (req: Request, res: Response) => {
+  const { refreshToken } = req.body;
+
+  try {
+    // Validate the refresh token
+    const userId = await validateRefreshToken(refreshToken);
+
+    // Generate a new access token
+    const user = await User.findById(userId);
+    if (!user) {
+      res.status(404).json({ message: "User not found" });
+      return;
+    }
+
+    const accessToken = generateToken(user);
+
+    res.status(200).json({ accessToken });
+    return;
+  } catch (error) {
+    res.status(400).json({ message: "Invalid refresh token", error });
+    return;
+  }
+};
+
+export const logoutUser = async (req: Request, res: Response) => {
+  const { refreshToken } = req.body;
+
+  try {
+    // Revoke the refresh token
+    await revokeRefreshToken(refreshToken);
+    res.status(200).json({ message: "Logout successful" });
+    return;
+  } catch (error) {
+    res.status(500).json({ message: "Error logging out", error });
     return;
   }
 };
