@@ -10,7 +10,12 @@ dotenv.config();
 const PORT = process.env.PORT || 3000;
 
 const app = express();
-app.use(cors({ origin: ["http://localhost:3000"], credentials: true }));
+app.use(
+  cors({
+    origin: ["http://localhost:3000", "http://localhost:5173"],
+    credentials: true,
+  })
+);
 app.use(express.json());
 
 // import routes
@@ -23,11 +28,9 @@ app.use("/", (req, res) => {
   res.status(200).json({ message: "Backend server is running..." });
 });
 
-
 app.use("*", (req, res) => {
   res.status(404).json({ message: "Route not found" });
 });
-
 
 const startServer = async () => {
   try {
