@@ -81,7 +81,7 @@ const loginUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         const trimmedEmail = email.trim().toLowerCase();
         const user = yield user_schema_1.default.findOne({ email: trimmedEmail });
         if (!user) {
-            res.status(401).json({ message: "User account not found" });
+            res.status(404).json({ message: "User account not found" });
             return;
         }
         const isMatch = yield (0, auth_1.comparePassword)(password, user.password);
