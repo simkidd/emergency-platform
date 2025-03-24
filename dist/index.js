@@ -17,6 +17,7 @@ const cors_1 = __importDefault(require("cors"));
 const dotenv_1 = __importDefault(require("dotenv"));
 const mongoDb_1 = __importDefault(require("./db/mongoDb"));
 const routes_1 = __importDefault(require("./routes"));
+const swagger_1 = require("./utils/swagger");
 dotenv_1.default.config();
 const PORT = process.env.PORT || 3000;
 const app = (0, express_1.default)();
@@ -24,6 +25,8 @@ app.use((0, cors_1.default)({ origin: ["http://localhost:3000"], credentials: tr
 app.use(express_1.default.json());
 // import routes
 app.use("/api/v1", routes_1.default);
+// Swagger setup
+(0, swagger_1.setupSwagger)(app);
 app.use("/", (req, res) => {
     res.status(200).json({ message: "Backend server is running..." });
 });

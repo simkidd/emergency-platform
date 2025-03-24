@@ -3,6 +3,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import connectDb from "./db/mongoDb";
 import router from "./routes";
+import { setupSwagger } from "./utils/swagger";
 
 dotenv.config();
 
@@ -15,13 +16,18 @@ app.use(express.json());
 // import routes
 app.use("/api/v1", router);
 
+// Swagger setup
+setupSwagger(app);
+
 app.use("/", (req, res) => {
   res.status(200).json({ message: "Backend server is running..." });
 });
 
+
 app.use("*", (req, res) => {
   res.status(404).json({ message: "Route not found" });
 });
+
 
 const startServer = async () => {
   try {

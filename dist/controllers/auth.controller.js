@@ -12,12 +12,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.logoutUser = exports.refreshToken = exports.loginUser = exports.registerUser = void 0;
+exports.updatePassword = exports.getMe = exports.logoutUser = exports.refreshToken = exports.loginUser = exports.registerUser = void 0;
 const user_schema_1 = __importDefault(require("../models/user.schema"));
 const auth_1 = require("../utils/auth");
 const auth_service_1 = require("../services/auth.service");
 const registerUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { email, location, name, password, role } = req.body;
+    const { email, location, name, password, role, phoneNumber, } = req.body;
     try {
         const trimmedEmail = email.trim().toLowerCase();
         const existingUser = yield user_schema_1.default.findOne({ email: trimmedEmail });
@@ -25,15 +25,28 @@ const registerUser = (req, res) => __awaiter(void 0, void 0, void 0, function* (
             res.status(400).json({ message: "User already exists" });
             return;
         }
+        // Validate location
+        if (!location ||
+            !location.coordinates ||
+            !Array.isArray(location.coordinates)) {
+            res.status(400).json({ message: "Invalid location format" });
+            return;
+        }
+        const [longitude, latitude] = location.coordinates;
+        if (isNaN(longitude) || isNaN(latitude)) {
+            res.status(400).json({ message: "Coordinates must be numbers" });
+            return;
+        }
         const hashedPassword = yield (0, auth_1.hashPassword)(password);
         const user = new user_schema_1.default({
             name,
             email: trimmedEmail,
             password: hashedPassword,
+            phoneNumber,
             role,
             location: {
-                type: "Point",
-                coordinates: location,
+                type: location.type,
+                coordinates: [longitude, latitude],
             },
         });
         yield user.save();
@@ -46,6 +59,7 @@ const registerUser = (req, res) => __awaiter(void 0, void 0, void 0, function* (
                 name: user.name,
                 email: user.email,
                 role: user.role,
+                phoneNumber: user.phoneNumber,
             },
             accessToken,
             refreshToken,
@@ -54,7 +68,9 @@ const registerUser = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     }
     catch (error) {
         console.log(error);
-        res.status(500).json({ message: "Error registering user", error: error });
+        res
+            .status(500)
+            .json({ message: "Error registering user", error: error.message });
         return;
     }
 });
@@ -130,3 +146,72 @@ const logoutUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     }
 });
 exports.logoutUser = logoutUser;
+const getMe = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const id = req.id;
+    try {
+        const user = yield user_schema_1.default.findById(id).select("-password");
+        if (!user) {
+            res.status(404).json({ message: "User not found" });
+            return;
+        }
+        res.status(200).json({
+            message: "User details fetched successfully",
+            user: {
+                id: user._id,
+                name: user.name,
+                email: user.email,
+                role: user.role,
+                location: user.location,
+            },
+        });
+        return;
+    }
+    catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Error fetching user details", error });
+        return;
+    }
+});
+exports.getMe = getMe;
+/**
+ * Update a user's password
+ */
+const updatePassword = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { currentPassword, newPassword } = req.body;
+    const id = req.id;
+    try {
+        // Find the user by ID
+        const user = yield user_schema_1.default.findById(id);
+        if (!user) {
+            res.status(404).json({ message: "User not found" });
+            return;
+        }
+        // Verify the current password
+        const isMatch = yield (0, auth_1.comparePassword)(currentPassword, user.password);
+        if (!isMatch) {
+            res.status(400).json({ message: "Current password is incorrect" });
+            return;
+        }
+        // Check if the new password is the same as the current password
+        const isSamePassword = yield (0, auth_1.comparePassword)(newPassword, user.password);
+        if (isSamePassword) {
+            res.status(400).json({
+                message: "New password cannot be the same as the current password",
+            });
+            return;
+        }
+        // Hash the new password
+        const hashedPassword = yield (0, auth_1.hashPassword)(newPassword);
+        yield user_schema_1.default.findByIdAndUpdate(id, {
+            password: hashedPassword,
+        }, { runValidators: false });
+        res.status(200).json({ message: "Password updated successfully" });
+        return;
+    }
+    catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Error updating password", error });
+        return;
+    }
+});
+exports.updatePassword = updatePassword;

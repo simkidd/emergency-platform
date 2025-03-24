@@ -15,11 +15,20 @@ export interface CreateUserInput {
   name: string;
   email: string;
   password: string;
+  phoneNumber: string;
   role: string;
-  location: [number];
+  location: {
+    type: string;
+    coordinates: number[]; // [longitude, latitude]
+  };
 }
 
 export interface LoginInput {
   email: string;
   password: string;
+}
+
+export interface UpdatePasswordInput {
+  currentPassword: string;
+  newPassword: string;
 }

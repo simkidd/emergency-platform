@@ -6,6 +6,7 @@ const userSchema = new Schema<IUser>(
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
+    phoneNumber: { type: String, required: true },
     role: {
       type: String,
       enum: ["user", "volunteer", "admin", "super_admin"],
@@ -13,11 +14,13 @@ const userSchema = new Schema<IUser>(
     },
     location: {
       type: { type: String, default: "Point" },
-      coordinates: { type: [Number], required: true }, // [longitude, latitude]
+      coordinates: {
+        type: [Number],
+        required: true,
+      }, // [longitude, latitude]
     },
-    skills: [{ type: String }], // Optional: For volunteers
   },
-  { timestamps: true } // Automatically adds `createdAt` and `updatedAt` fields
+  { timestamps: true }
 );
 
 // Index for geolocation queries
